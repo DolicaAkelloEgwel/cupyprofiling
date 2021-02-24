@@ -18,15 +18,18 @@ class DummyProgress:
         pass
 
 
-dtype = "float32"
-cuda = utility.CudaExecuter("float32")
+class OutlierProfiler():
+    def __init__(self):
+        self.dtype = "float32"
+        self.cuda = utility.CudaExecuter("float32")
+        self.mode = "bright"
+        self.progress = DummyProgress()
+        self.diff = 0.5
 
-filter_size = args.filter_size
-mode = "bright"
-progress = DummyProgress()
-diff = 0.5
-data = np.random.rand(args.n_images, args.arr_size,
-                      args.arr_size).astype(dtype)
+    def run_outliers(self, filter_size: int, arr_size: int, n_images: int):
+        data = np.random.rand(n_images, arr_size, arr_size).astype(self.dtype)
+        with cp.cuda.profile():
+            self.cuda.remove_outlier(data, self.diff, filter_size, self.mode, self.progress)
 
-with cp.cuda.profile():
-    cuda.remove_outlier(data, diff, filter_size, mode, progress)
+p = OutlierProfiler()
+p.run_outliers(3,100,100)
